@@ -1,0 +1,15 @@
+{
+  "name": "numen-console-body",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minecraft network body for the Numen JVM agent",
+  "license": "LGPL-3.0-only",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/*.test.cjs" },
+  "dependencies": {
+    "minecraft-data": "3.117.0",
+    "mineflayer": "4.39.0",
+    "mineflayer-pathfinder": "2.4.5",
+    "vec3": "0.2.0"
+  }
+}

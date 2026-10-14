@@ -1,0 +1,11 @@
+// 独立入口只配置纯 JVM 模块,构建与运行都不下载 Minecraft 或模组加载器。
+rootProject.name = 'numen-console'
+def repo = file('../..')
+def shared = new Properties()
+repo.toPath().resolve('gradle.properties').toFile().withInputStream { shared.load(it) }
+gradle.beforeProject { p ->
+    shared.each { key, value -> p.ext.set(key.toString(), value) }
+    p.version = shared.getProperty('version')
+}
+include 'ai', 'agent', 'lua'
+['ai', 'agent', 'lua'].each { project(":${it}").projectDir = new File(repo, it) }

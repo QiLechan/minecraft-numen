@@ -21,6 +21,52 @@
 > [!TIP]
 > 欢迎加入 QQ 交流群 **1121662678** 或 [Discord](https://discord.gg/FpDCV327vX)交流。更多详情请见[官网](https://numen.dwinovo.cn)。
 
+## 独立命令行客户端
+
+本分支提供不需要安装 Minecraft、Fabric、NeoForge 或服务端 Numen 模组的客户端。
+它直接复用本仓库的 `ai`、`agent` 大脑，通过 [Mineflayer](https://github.com/PrismarineJS/mineflayer)
+作为普通 Java 版玩家连接服务器。原模组模块保留，客户端适配集中在 `numen-api/console` 与
+`numen/console`，便于合并上游更新。
+
+需要 **Java 21**、**Node.js 22 或更新版本**和 npm。在仓库根目录构建：
+
+```bash
+./gradlew -p numen-api/console build installDist --no-daemon
+```
+
+发行目录在 `numen-api/console/build/install/numen-console/`，包含启动脚本、JVM 库和网络身体依赖。
+复制其中的 `config.example.json` 为自己的配置文件，填写服务器、账号、主人游戏名和模型参数。
+模型密钥从环境变量读取：
+
+```bash
+export NUMEN_API_KEY='你的模型 API key'
+numen-api/console/build/install/numen-console/bin/numen-console --config /绝对路径/config.json
+```
+
+Windows 使用发行目录中的 `bin/numen-console.bat`。`auth: "microsoft"` 通过设备码登录拥有
+Minecraft Java 版的微软账号；`auth: "offline"` 仅用于允许离线账号的服务器，此时 `username`
+是游戏名。`version: "auto"` 自动识别版本，也可填写明确版本号。运行 `numen-console --versions`
+查看锁定依赖的实际清单：目前测试清单从 **1.8.8 到 26.1**，不承诺清单以外的版本、未来版本、
+基岩版或强制要求客户端模组的服务器。微软账号和白名单等服务器登录要求仍然适用。
+
+直接在终端输入自然语言即可驱动 AI；游戏中只把 `owner` 指定玩家的话当作指令。
+支持状态与附近查询、聊天与服务器命令、寻路移动、挖掘、放置、合成、装备、进食、
+方块/实体交互、容器存取、丢物品和单次攻击。移动不自动挖掘、垫方块或开门；这些动作由
+模型明确指定目标。模型可使用 `chat` 回复游戏里的玩家，普通最终回复显示在终端。
+这是原项目大脑的网络客户端宿主，原模组专用的联动、界面、服务端本能与 Lua 游戏 API
+尚未迁移到网络身体。
+
+默认权限模式 `ask` 对每个改世界、消耗物品、合成、攻击或服务器命令的具体动作询问：
+终端输入 `/approve 编号` 或 `/deny 编号`，90 秒未答复则拒绝。网络客户端看不到服务器的
+方块归属记录，因此不套用模组的归属信号规则。`/mode observe` 拒绝这些动作，
+`/mode bypass` 允许这些动作。动作与实际结局都回报给模型。
+
+`/stop` 停止 AI、移动和挖掘；`/respawn` 在死亡后复活；`/say 内容` 发送聊天；
+`/command /指令` 经权限层发送服务器指令；`/goal 目标` 设置持续目标；`/compact` 和
+`/clear` 整理或清空上下文；`/status` 查看状态；`/quit` 断开连接。
+`/help` 显示完整操作。认证缓存和按服务器/账号/主人隔离的对话、收件箱、目标存放在配置文件
+旁的 `numen-console-state/`，可用 `stateDirectory` 指定位置。
+
 ## 安装
 
 言出法随已发布在 [CurseForge](https://www.curseforge.com/projects/1581109)，在你常用的 Minecraft 启动器中搜索 **"Numen"** 模组下载即可。目前支持如下版本和加载器：

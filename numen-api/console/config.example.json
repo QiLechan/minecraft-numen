@@ -1,0 +1,17 @@
+{
+  "host": "localhost",
+  "port": 25565,
+  "username": "numen-account",
+  "auth": "microsoft",
+  "version": "auto",
+  "owner": "YourMinecraftName",
+  "stateDirectory": "numen-console-state",
+  "permission": "ask",
+  "llm": {
+    "provider": "custom",
+    "protocol": "chat",
+    "model": "your-model-id",
+    "baseUrl": "https://api.example.com/v1",
+    "apiKeyEnv": "NUMEN_API_KEY"
+  }
+}

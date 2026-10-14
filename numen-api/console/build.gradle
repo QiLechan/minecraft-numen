@@ -1,0 +1,55 @@
+plugins { id 'application' }
+
+repositories { mavenCentral() }
+java { toolchain.languageVersion = JavaLanguageVersion.of(21) }
+application {
+    mainClass = 'com.dwinovo.numen.api.console.ConsoleMain'
+    applicationName = 'numen-console'
+}
+// Mode 本身是纯 JVM,与模组使用同一个定义;其余权限实现需要服务端世界,不能装入网络客户端。
+sourceSets.main.java {
+    srcDir '../common/src/main/java'
+    include 'com/dwinovo/numen/api/console/**', 'com/dwinovo/numen/api/permission/Mode.java'
+}
+dependencies {
+    implementation project(':agent')
+    runtimeOnly 'org.slf4j:slf4j-simple:2.0.9'
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test {
+    useJUnitPlatform()
+    systemProperty 'numen.test.classpath', sourceSets.main.runtimeClasspath.asPath
+    systemProperty 'numen.test.bridge', file('../../numen/console/bridge.cjs').absolutePath
+    systemProperty 'numen.test.server', file('../../numen/console/test/server.cjs').absolutePath
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def bridge = file('../../numen/console')
+def npmExecutable = System.getProperty('os.name').toLowerCase(Locale.ROOT).startsWith('windows') ? 'npm.cmd' : 'npm'
+tasks.register('npmInstall', Exec) {
+    workingDir bridge
+    commandLine npmExecutable, 'ci', '--no-audit', '--no-fund'
+    inputs.files(new File(bridge, 'package.json'), new File(bridge, 'package-lock.json'))
+    outputs.dir new File(bridge, 'node_modules')
+}
+tasks.register('bridgeTest', Exec) {
+    dependsOn 'npmInstall'
+    workingDir bridge
+    commandLine npmExecutable, 'test'
+}
+tasks.named('check') { dependsOn 'bridgeTest' }
+tasks.named('run', JavaExec) {
+    dependsOn 'npmInstall'
+    standardInput = System.in
+    systemProperty 'numen.bridge', new File(bridge, 'bridge.cjs').absolutePath
+}
+distributions.main.contents {
+    from(bridge) {
+        into 'bridge'
+        exclude 'test/**', '.env', 'node_modules/.cache/**'
+    }
+    from('config.example.json')
+    from('../../LICENSE')
+}
+['installDist', 'distZip', 'distTar'].each { name -> tasks.named(name) { dependsOn 'npmInstall' } }
